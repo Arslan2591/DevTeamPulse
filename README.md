@@ -1,5 +1,7 @@
 # Dev Team Pulse v4
 
+**Live Demo:** https://arslan2591.github.io/DevTeamPulse/
+
 A lightweight, single-file web application that transforms Jira CSV exports into an interactive team capacity and workload dashboard. Built for engineering managers and team leads who need quick visibility into team health without complex tooling.
 
 ## Features
