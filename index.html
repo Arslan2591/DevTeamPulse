@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEV Team Pulse v4 — Jira Report</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #181a22;
+  --surface-2: #1e2130;
+  --border: #2a2d3a;
+  --text: #e2e4ed;
+  --text-dim: #8b8fa3;
+  --text-muted: #5c6070;
+  --accent: #6c9cff;
+  --green: #34d399;
+  --green-bg: rgba(52, 211, 153, 0.08);
+  --yellow: #fbbf24;
+  --yellow-bg: rgba(251, 191, 36, 0.08);
+  --red: #f87171;
+  --red-bg: rgba(248, 113, 113, 0.08);
+  --orange: #fb923c;
+  --orange-bg: rgba(251, 146, 60, 0.08);
+  --purple: #a78bfa;
+  --purple-bg: rgba(167, 139, 250, 0.08);
+  --gold: #f59e0b;
+  --gold-bg: rgba(245, 158, 11, 0.07);
+  --gold-border: rgba(245, 158, 11, 0.18);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* ─── Upload Screen ─── */
+#upload-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.upload-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.upload-header h1 {
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.upload-header .version-tag {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  background: var(--gold-bg);
+  border: 1px solid var(--gold-border);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+  -webkit-text-fill-color: var(--gold);
+}
+
+.upload-header p {
+  color: var(--text-dim);
+  font-size: 1rem;
+}
+
+.drop-zone {
+  width: 100%;
+  max-width: 520px;
+  border: 2px dashed var(--border);
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: var(--surface);
+}
+
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(108, 156, 255, 0.04);
+}
+
+.drop-zone svg {
+  width: 48px;
+  height: 48px;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.drop-zone .label {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 0.3rem;
+}
+
+.drop-zone .sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.drop-zone input { display: none; }
+
+/* ─── JQL Hint (updated for v4) ─── */
+.jql-hint {
+  margin-top: 2rem;
+  padding: 1rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  max-width: 520px;
+  width: 100%;
+}
+
+.jql-hint .jql-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.jql-copy-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+.jql-copy-btn:hover { border-color: var(--accent); color: var(--text); }
+.jql-copy-btn.copied { color: var(--green); border-color: rgba(52,211,153,0.3); }
+
+.jql-hint code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--accent);
+  word-break: break-all;
+}
+
+.jql-note {
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ─── Report Screen ─── */
+#report-screen { display: none; padding: 2rem; max-width: 1100px; margin: 0 auto; }
+
+.report-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.report-bar h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.report-bar .v4-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  background: var(--gold-bg);
+  border: 1px solid var(--gold-border);
+  border-radius: 4px;
+  padding: 0.15rem 0.45rem;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+}
+
+.report-bar .meta {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+.btn-reset {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  transition: all 0.2s;
+}
+.btn-reset:hover { border-color: var(--accent); color: var(--text); }
+
+/* ─── Summary Strip ─── */
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.2rem 1.4rem;
+}
+
+.summary-card.wins-card {
+  background: var(--gold-bg);
+  border-color: var(--gold-border);
+}
+
+.summary-card .sc-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.wins-card .sc-label { color: rgba(245, 158, 11, 0.6); }
+
+.summary-card .sc-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.wins-card .sc-value { color: var(--gold); }
+
+.summary-card .sc-sub {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-top: 0.15rem;
+}
+
+.wins-card .sc-sub { color: rgba(245, 158, 11, 0.5); }
+
+/* ─── Dev Cards ─── */
+.dev-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  animation: cardIn 0.4s ease both;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dev-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 1.6rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.dev-name {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.dev-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.01em;
+}
+
+.badge-green { background: var(--green-bg); color: var(--green); border: 1px solid rgba(52, 211, 153, 0.2); }
+.badge-yellow { background: var(--yellow-bg); color: var(--yellow); border: 1px solid rgba(251, 191, 36, 0.2); }
+.badge-red { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248, 113, 113, 0.2); }
+.badge-orange { background: var(--orange-bg); color: var(--orange); border: 1px solid rgba(251, 146, 60, 0.2); }
+.badge-purple { background: var(--purple-bg); color: var(--purple); border: 1px solid rgba(167, 139, 250, 0.2); }
+.badge-gold { background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold-border); }
+
+.dev-body { padding: 1.2rem 1.6rem; }
+
+/* Capacity bar */
+.capacity-section { margin-bottom: 1.2rem; }
+
+.capacity-label {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.capacity-label .days {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.days-green { color: var(--green); }
+.days-yellow { color: var(--yellow); }
+.days-red { color: var(--red); }
+
+.capacity-bar-track {
+  width: 100%;
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.capacity-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bar-green { background: var(--green); }
+.bar-yellow { background: var(--yellow); }
+.bar-red { background: var(--red); }
+
+/* Status breakdown mini row */
+.status-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.status-chip {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.status-chip .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-backlog { background: var(--text-muted); }
+.dot-selected { background: var(--accent); }
+.dot-progress { background: var(--yellow); }
+.dot-review { background: var(--orange); }
+.dot-merged { background: var(--green); }
+.dot-other { background: var(--purple); }
+
+.status-chip .count {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Alerts */
+.alerts { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.alert-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.alert-row.alert-red { background: var(--red-bg); color: var(--red); border-left: 3px solid var(--red); }
+.alert-row.alert-orange { background: var(--orange-bg); color: var(--orange); border-left: 3px solid var(--orange); }
+.alert-row.alert-yellow { background: var(--yellow-bg); color: var(--yellow); border-left: 3px solid var(--yellow); }
+.alert-row.alert-purple { background: var(--purple-bg); color: var(--purple); border-left: 3px solid var(--purple); }
+
+.alert-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+.alert-row .issue-key {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+
+.no-alerts {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+
+/* ─── Wins Section ─── */
+.wins-section {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.wins-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.wins-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+}
+
+.wins-title-icon {
+  font-size: 0.95rem;
+}
+
+.wins-week-group {
+  margin-bottom: 0.75rem;
+}
+
+.wins-week-label {
+  font-size: 0.67rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.wins-week-label .week-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0.5;
+}
+
+.wins-week-label.this-week .week-dot {
+  opacity: 1;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+}
+
+.wins-week-label.this-week {
+  color: rgba(245, 158, 11, 0.7);
+}
+
+.win-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 7px;
+  background: var(--gold-bg);
+  border: 1px solid var(--gold-border);
+  margin-bottom: 0.35rem;
+  transition: border-color 0.2s;
+}
+
+.win-row:hover {
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.win-row.last-week {
+  background: rgba(245, 158, 11, 0.03);
+  border-color: rgba(245, 158, 11, 0.1);
+}
+
+.win-check {
+  color: var(--gold);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.win-row.last-week .win-check {
+  color: var(--text-muted);
+}
+
+.win-key {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gold);
+  text-decoration: none;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.win-row.last-week .win-key {
+  color: var(--text-dim);
+}
+
+.win-key:hover { text-decoration: underline; }
+
+.win-summary {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.win-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.no-wins {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 0.4rem 0;
+}
+
+/* Issues table inside expandable */
+.issues-toggle {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.8rem;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.3rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.toggle-btn:hover { text-decoration: underline; }
+
+.issues-table {
+  display: none;
+  margin-top: 0.8rem;
+  width: 100%;
+  overflow-x: auto;
+}
+.issues-table.open { display: block; }
+
+.issues-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.issues-table th {
+  text-align: left;
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.issues-table td {
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid rgba(42, 45, 58, 0.5);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.issues-table td:first-child {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.issues-table td.summary-cell {
+  white-space: normal;
+  max-width: 340px;
+}
+
+.issues-table tr:last-child td { border-bottom: none; }
+a.issue-key:hover, .issues-table td a:hover { text-decoration: underline !important; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  #report-screen { padding: 1rem; }
+  .dev-header, .dev-body { padding: 1rem; }
+  .summary-strip { grid-template-columns: repeat(2, 1fr); }
+  .win-summary { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ────── Upload Screen ────── -->
+<div id="upload-screen">
+  <div class="upload-header">
+    <h1>DEV Team Pulse <span class="version-tag">v4</span></h1>
+    <p>Drop your Jira CSV export to generate a capacity, anomaly &amp; wins report</p>
+  </div>
+
+  <div class="drop-zone" id="dropZone">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+    </svg>
+    <div class="label">Drop Jira CSV here</div>
+    <div class="sub">or click to browse</div>
+    <input type="file" id="fileInput" accept=".csv">
+  </div>
+
+  <div class="jql-hint">
+    <div class="jql-label">
+      <span>Run this JQL in Jira first</span>
+      <button class="jql-copy-btn" id="jqlCopyBtn" onclick="copyJQL()">Copy</button>
+    </div>
+    <code id="jqlCode">project = DEV AND (statusCategory in ("In Progress", "To Do") OR (status = Merged AND updated >= -14d)) ORDER BY assignee ASC, key ASC</code>
+    <div class="jql-note">Pulls active board items + anything merged in the last 14 days for the wins feed.</div>
+  </div>
+</div>
+
+<!-- ────── Report Screen ────── -->
+<div id="report-screen">
+  <div class="report-bar">
+    <div>
+      <h1>Team Pulse Report <span class="v4-tag">v4</span></h1>
+      <div class="meta" id="reportMeta"></div>
+    </div>
+    <button class="btn-reset" onclick="resetReport()">← Upload new CSV</button>
+  </div>
+
+  <div class="summary-strip" id="summaryStrip"></div>
+  <div id="devCards"></div>
+</div>
+
+<script>
+/* ─── CSV Parsing ─── */
+function parseCSV(text) {
+  let current = '';
+  let inQuotes = false;
+  const lines = [];
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+      current += ch;
+    } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      if (current.trim()) lines.push(current);
+      current = '';
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) lines.push(current);
+
+  const rows = [];
+  for (const line of lines) {
+    const fields = [];
+    let field = '';
+    let inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQ && line[i + 1] === '"') { field += '"'; i++; }
+        else { inQ = !inQ; }
+      } else if (ch === ',' && !inQ) {
+        fields.push(field);
+        field = '';
+      } else {
+        field += ch;
+      }
+    }
+    fields.push(field);
+    rows.push(fields);
+  }
+
+  const headers = rows[0];
+  return rows.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h, i) => { obj[h.trim()] = (r[i] || '').trim(); });
+    return obj;
+  });
+}
+
+/* ─── Helpers ─── */
+function secToHours(s) {
+  const n = parseInt(s);
+  return isNaN(n) ? 0 : n / 3600;
+}
+
+function fmtDays(d) {
+  return d < 0.1 ? '0d' : d.toFixed(1) + 'd';
+}
+
+function fmtHours(h) {
+  return h < 0.1 ? '0h' : h.toFixed(1) + 'h';
+}
+
+function truncate(s, max) {
+  return s.length > max ? s.substring(0, max) + '…' : s;
+}
+
+/* ─── Date parsing ─── */
+// Handles Jira's "19/Feb/26 12:16 PM" format
+function parseJiraDate(s) {
+  if (!s) return null;
+  const m = s.match(/(\d+)\/(\w+)\/(\d+)\s+(\d+):(\d+)\s+(AM|PM)/i);
+  if (!m) return null;
+  const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+  let [, day, mon, yr, hr, min, ampm] = m;
+  const year = 2000 + parseInt(yr);
+  let hour = parseInt(hr);
+  if (ampm.toUpperCase() === 'PM' && hour !== 12) hour += 12;
+  if (ampm.toUpperCase() === 'AM' && hour === 12) hour = 0;
+  return new Date(year, months[mon], parseInt(day), hour, parseInt(min));
+}
+
+function fmtWinDate(d) {
+  if (!d) return '';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+/* Returns { thisMonday, lastMonday, lastSunday } for win bucketing */
+function getWeekBounds() {
+  const now = new Date();
+  const dow = now.getDay(); // 0=Sun
+  const daysToMon = dow === 0 ? -6 : 1 - dow;
+  const thisMonday = new Date(now);
+  thisMonday.setDate(now.getDate() + daysToMon);
+  thisMonday.setHours(0, 0, 0, 0);
+
+  const lastMonday = new Date(thisMonday);
+  lastMonday.setDate(thisMonday.getDate() - 7);
+
+  const lastSunday = new Date(thisMonday);
+  lastSunday.setMilliseconds(-1);
+
+  return { thisMonday, lastMonday, lastSunday };
+}
+
+const STATUS_DOT = {
+  'Backlog': 'dot-backlog',
+  'Selected for Development': 'dot-selected',
+  'In Progress': 'dot-progress',
+  'In Review': 'dot-review',
+  'Merged': 'dot-merged',
+  'Done': 'dot-merged',
+  'Requirements Gathering': 'dot-other',
+};
+
+function displayStatus(s) {
+  return s === 'Merged' ? 'Done' : s;
+}
+
+function dotClass(status) {
+  return STATUS_DOT[status] || 'dot-other';
+}
+
+/* ─── Analysis ─── */
+function analyzeData(issues) {
+  const ACTIVE_STATUSES = new Set([
+    'Selected for Development', 'In Progress', 'In Review', 'Merged', 'Done'
+  ]);
+
+  const assigned = issues.filter(i =>
+    i['Assignee'] && i['Assignee'].trim() &&
+    ACTIVE_STATUSES.has((i['Status'] || '').trim())
+  );
+
+  const devMap = {};
+  for (const issue of assigned) {
+    const name = issue['Assignee'].trim();
+    if (!devMap[name]) devMap[name] = [];
+    devMap[name].push(issue);
+  }
+
+  const LOW_THRESHOLD_DAYS = 2;
+  const { thisMonday, lastMonday, lastSunday } = getWeekBounds();
+  const devReports = [];
+
+  for (const [name, devIssues] of Object.entries(devMap)) {
+    const report = { name, issues: devIssues, alerts: [], wins: { thisWeek: [], lastWeek: [] } };
+
+    let totalRemainingHrs = 0;
+    let totalOriginalHrs = 0;
+    let totalSpentHrs = 0;
+    const statusCounts = {};
+
+    for (const issue of devIssues) {
+      const status = issue['Status'] || 'Unknown';
+      statusCounts[status] = (statusCounts[status] || 0) + 1;
+
+      totalRemainingHrs += secToHours(issue['Remaining Estimate']);
+      totalOriginalHrs += secToHours(issue['Original estimate']);
+      totalSpentHrs += secToHours(issue['Time Spent']);
+
+      // ── Wins detection ──
+      if (status === 'Merged') {
+        const mergedAt = parseJiraDate(issue['Status Category Changed']) ||
+                         parseJiraDate(issue['Updated']);
+        if (mergedAt) {
+          const win = {
+            key: issue['Issue key'],
+            summary: issue['Summary'],
+            date: mergedAt
+          };
+          if (mergedAt >= thisMonday) {
+            report.wins.thisWeek.push(win);
+          } else if (mergedAt >= lastMonday && mergedAt <= lastSunday) {
+            report.wins.lastWeek.push(win);
+          }
+        }
+      }
+    }
+
+    // Sort wins newest first
+    report.wins.thisWeek.sort((a, b) => b.date - a.date);
+    report.wins.lastWeek.sort((a, b) => b.date - a.date);
+
+    report.remainingDays = totalRemainingHrs / 8;
+    report.totalEstimateDays = totalOriginalHrs / 8;
+    report.totalSpentDays = totalSpentHrs / 8;
+    report.statusCounts = statusCounts;
+    report.totalIssues = devIssues.length;
+
+    // Capacity status
+    if (report.remainingDays < LOW_THRESHOLD_DAYS) {
+      report.capacityStatus = 'red';
+      report.capacityLabel = report.remainingDays < 0.5 ? 'Needs work ASAP' : 'Running low';
+    } else if (report.remainingDays < 5) {
+      report.capacityStatus = 'yellow';
+      report.capacityLabel = 'Moderate runway';
+    } else {
+      report.capacityStatus = 'green';
+      report.capacityLabel = 'Good runway';
+    }
+
+    // ── Anomalies ──
+
+    // 1. Work Ratio > 100%
+    for (const issue of devIssues) {
+      const wr = issue['Work Ratio'];
+      if (wr) {
+        const pct = parseInt(wr.replace('%', ''));
+        if (!isNaN(pct) && pct > 100) {
+          report.alerts.push({
+            type: 'red', icon: '⚠',
+            text: `<a href="https://aimyable.atlassian.net/browse/${issue['Issue key']}" target="_blank" class="issue-key" style="text-decoration:none;color:inherit;">${issue['Issue key']}</a> is at <strong>${pct}% work ratio</strong> — over estimate by ${pct - 100}%. "${truncate(issue['Summary'], 50)}"`
+          });
+        }
+      }
+    }
+
+    // 2. Estimate but no time logged
+    for (const issue of devIssues) {
+      const hasEstimate = parseInt(issue['Original estimate']) > 0;
+      const hasTimeSpent = parseInt(issue['Time Spent']) > 0;
+      const status = issue['Status'];
+      if (hasEstimate && !hasTimeSpent && status !== 'Merged' && status !== 'Done') {
+        report.alerts.push({
+          type: 'yellow', icon: '⏱',
+          text: `<a href="https://aimyable.atlassian.net/browse/${issue['Issue key']}" target="_blank" class="issue-key" style="text-decoration:none;color:inherit;">${issue['Issue key']}</a> has an estimate but <strong>no time logged</strong> (status: ${displayStatus(status)}). "${truncate(issue['Summary'], 50)}"`
+        });
+      }
+    }
+
+    // 3. Issues stuck In Review
+    const inReview = devIssues.filter(i => i['Status'] === 'In Review');
+    if (inReview.length >= 2) {
+      const keys = inReview.map(i => `<a href="https://aimyable.atlassian.net/browse/${i['Issue key']}" target="_blank" style="text-decoration:none;color:inherit;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem;">${i['Issue key']}</a>`).join(', ');
+      report.alerts.push({
+        type: 'orange', icon: '👀',
+        text: `<strong>${inReview.length} issues sitting In Review</strong> — possible review bottleneck. (${keys})`
+      });
+    }
+
+    // 4. No estimate on active issues
+    const noEstimate = devIssues.filter(i => {
+      const oe = parseInt(i['Original estimate']);
+      const status = i['Status'];
+      return (isNaN(oe) || oe === 0) && status !== 'Merged' && status !== 'Done';
+    });
+    if (noEstimate.length > 0) {
+      const keys = noEstimate.map(i => `<a href="https://aimyable.atlassian.net/browse/${i['Issue key']}" target="_blank" style="text-decoration:none;color:inherit;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem;">${i['Issue key']}</a>`).join(', ');
+      report.alerts.push({
+        type: 'purple', icon: '📐',
+        text: `<strong>${noEstimate.length} active issue${noEstimate.length > 1 ? 's' : ''} with no estimate</strong> — can't measure capacity. (${keys})`
+      });
+    }
+
+    // 5. High ratio of Done vs active
+    const mergedCount = (statusCounts['Merged'] || 0) + (statusCounts['Done'] || 0);
+    const activeCount = report.totalIssues - mergedCount;
+    if (mergedCount > 0 && activeCount <= 1 && report.totalIssues > 2) {
+      report.alerts.push({
+        type: 'yellow', icon: '🔄',
+        text: `<strong>${mergedCount} of ${report.totalIssues} board items are Done</strong> — only ${activeCount} active. Running out of pipeline?`
+      });
+    }
+
+    devReports.push(report);
+  }
+
+  // Sort: red first, then yellow, then green
+  const order = { red: 0, yellow: 1, green: 2 };
+  devReports.sort((a, b) => (order[a.capacityStatus] ?? 3) - (order[b.capacityStatus] ?? 3));
+
+  // Global stats
+  const totalAssignedIssues = assigned.length;
+  const totalDevs = devReports.length;
+  const devsRunningLow = devReports.filter(d => d.capacityStatus === 'red').length;
+  const totalAlerts = devReports.reduce((s, d) => s + d.alerts.length, 0);
+  const totalInReview = assigned.filter(i => i['Status'] === 'In Review').length;
+  const totalWinsThisWeek = devReports.reduce((s, d) => s + d.wins.thisWeek.length, 0);
+  const totalWinsLastWeek = devReports.reduce((s, d) => s + d.wins.lastWeek.length, 0);
+
+  return { devReports, totalAssignedIssues, totalDevs, devsRunningLow, totalAlerts, totalInReview, totalWinsThisWeek, totalWinsLastWeek, totalIssues: issues.length };
+}
+
+/* ─── Render ─── */
+function renderReport(data) {
+  document.getElementById('upload-screen').style.display = 'none';
+  document.getElementById('report-screen').style.display = 'block';
+
+  const now = new Date();
+  document.getElementById('reportMeta').textContent =
+    `Generated ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} — ${data.totalAssignedIssues} active board items across ${data.totalDevs} developers (${data.totalIssues} total in export)`;
+
+  // Summary strip
+  const strip = document.getElementById('summaryStrip');
+  strip.innerHTML = `
+    <div class="summary-card">
+      <div class="sc-label">Developers</div>
+      <div class="sc-value">${data.totalDevs}</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Running Low</div>
+      <div class="sc-value" style="color: ${data.devsRunningLow > 0 ? 'var(--red)' : 'var(--green)'}">${data.devsRunningLow}</div>
+      <div class="sc-sub">&lt; 2 days remaining</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">In Review</div>
+      <div class="sc-value" style="color: ${data.totalInReview > 4 ? 'var(--orange)' : 'var(--text)'}">${data.totalInReview}</div>
+      <div class="sc-sub">across all devs</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Total Alerts</div>
+      <div class="sc-value" style="color: ${data.totalAlerts > 0 ? 'var(--yellow)' : 'var(--green)'}">${data.totalAlerts}</div>
+      <div class="sc-sub">anomalies found</div>
+    </div>
+    <div class="summary-card wins-card">
+      <div class="sc-label">🏆 Wins This Week</div>
+      <div class="sc-value">${data.totalWinsThisWeek}</div>
+      <div class="sc-sub">${data.totalWinsLastWeek} last week</div>
+    </div>
+  `;
+
+  // Dev cards
+  const container = document.getElementById('devCards');
+  container.innerHTML = '';
+
+  for (let idx = 0; idx < data.devReports.length; idx++) {
+    const d = data.devReports[idx];
+    const card = document.createElement('div');
+    card.className = 'dev-card';
+    card.style.animationDelay = `${idx * 0.07}s`;
+
+    // Badges
+    let badges = `<span class="badge badge-${d.capacityStatus}">${d.capacityLabel}</span>`;
+    if (d.alerts.length > 0) {
+      badges += `<span class="badge badge-orange">${d.alerts.length} alert${d.alerts.length > 1 ? 's' : ''}</span>`;
+    }
+    const totalDevWins = d.wins.thisWeek.length + d.wins.lastWeek.length;
+    if (totalDevWins > 0) {
+      badges += `<span class="badge badge-gold">🏆 ${totalDevWins} win${totalDevWins > 1 ? 's' : ''}</span>`;
+    }
+
+    // Status chips
+    let statusChips = '';
+    for (const [status, count] of Object.entries(d.statusCounts)) {
+      statusChips += `<div class="status-chip"><span class="dot ${dotClass(status)}"></span>${displayStatus(status)} <span class="count">${count}</span></div>`;
+    }
+
+    // Capacity bar
+    const barMax = 10;
+    const barPct = Math.min(100, (d.remainingDays / barMax) * 100);
+    const barClass = d.capacityStatus === 'red' ? 'bar-red' : d.capacityStatus === 'yellow' ? 'bar-yellow' : 'bar-green';
+    const daysClass = d.capacityStatus === 'red' ? 'days-red' : d.capacityStatus === 'yellow' ? 'days-yellow' : 'days-green';
+
+    // Alerts HTML
+    let alertsHTML = '';
+    if (d.alerts.length > 0) {
+      for (const a of d.alerts) {
+        alertsHTML += `<div class="alert-row alert-${a.type}"><span class="alert-icon">${a.icon}</span><span>${a.text}</span></div>`;
+      }
+    } else {
+      alertsHTML = '<div class="no-alerts">No anomalies detected — looking good.</div>';
+    }
+
+    // Wins HTML
+    let winsHTML = '';
+    const hasAnyWins = d.wins.thisWeek.length > 0 || d.wins.lastWeek.length > 0;
+
+    if (hasAnyWins) {
+      winsHTML += `<div class="wins-section">
+        <div class="wins-header">
+          <span class="wins-title-icon">🏆</span>
+          <span class="wins-title">Recent Wins</span>
+        </div>`;
+
+      if (d.wins.thisWeek.length > 0) {
+        winsHTML += `<div class="wins-week-group">
+          <div class="wins-week-label this-week"><span class="week-dot"></span>This Week</div>`;
+        for (const w of d.wins.thisWeek) {
+          winsHTML += `<div class="win-row">
+            <span class="win-check">✦</span>
+            <a href="https://aimyable.atlassian.net/browse/${w.key}" target="_blank" class="win-key">${w.key}</a>
+            <span class="win-summary">${truncate(w.summary, 70)}</span>
+            <span class="win-date">${fmtWinDate(w.date)}</span>
+          </div>`;
+        }
+        winsHTML += `</div>`;
+      }
+
+      if (d.wins.lastWeek.length > 0) {
+        winsHTML += `<div class="wins-week-group">
+          <div class="wins-week-label"><span class="week-dot"></span>Last Week</div>`;
+        for (const w of d.wins.lastWeek) {
+          winsHTML += `<div class="win-row last-week">
+            <span class="win-check">✓</span>
+            <a href="https://aimyable.atlassian.net/browse/${w.key}" target="_blank" class="win-key">${w.key}</a>
+            <span class="win-summary">${truncate(w.summary, 70)}</span>
+            <span class="win-date">${fmtWinDate(w.date)}</span>
+          </div>`;
+        }
+        winsHTML += `</div>`;
+      }
+
+      winsHTML += `</div>`;
+    } else {
+      winsHTML = `<div class="wins-section">
+        <div class="wins-header">
+          <span class="wins-title-icon">🏆</span>
+          <span class="wins-title">Recent Wins</span>
+        </div>
+        <div class="no-wins">No merges in the last 14 days — check the JQL includes recent Merged items.</div>
+      </div>`;
+    }
+
+    // Issues table (active only)
+    const activeIssues = d.issues.filter(i => i['Status'] !== 'Merged' && i['Status'] !== 'Done');
+    let tableRows = '';
+    for (const issue of activeIssues) {
+      const estH = secToHours(issue['Original estimate']);
+      const spentH = secToHours(issue['Time Spent']);
+      const remH = secToHours(issue['Remaining Estimate']);
+      const wr = issue['Work Ratio'] || '—';
+      tableRows += `<tr>
+        <td><a href="https://aimyable.atlassian.net/browse/${issue['Issue key']}" target="_blank" style="color:var(--accent);text-decoration:none;">${issue['Issue key']}</a></td>
+        <td class="summary-cell">${truncate(issue['Summary'], 60)}</td>
+        <td>${displayStatus(issue['Status'])}</td>
+        <td>${issue['Issue Type']}</td>
+        <td>${estH ? fmtHours(estH) : '—'}</td>
+        <td>${spentH ? fmtHours(spentH) : '—'}</td>
+        <td>${remH ? fmtHours(remH) : '—'}</td>
+        <td>${wr}</td>
+      </tr>`;
+    }
+
+    card.innerHTML = `
+      <div class="dev-header">
+        <span class="dev-name">${d.name}</span>
+        <div class="dev-badges">${badges}</div>
+      </div>
+      <div class="dev-body">
+        <div class="capacity-section">
+          <div class="capacity-label">
+            <span>Remaining workload</span>
+            <span class="days ${daysClass}">${fmtDays(d.remainingDays)} remaining</span>
+          </div>
+          <div class="capacity-bar-track">
+            <div class="capacity-bar-fill ${barClass}" style="width: ${barPct}%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:0.35rem;">
+            <span style="font-size:0.72rem;color:var(--text-muted)">${fmtDays(d.totalSpentDays)} spent of ${fmtDays(d.totalEstimateDays)} estimated</span>
+            <span style="font-size:0.72rem;color:var(--text-muted)">${d.totalIssues} issue${d.totalIssues !== 1 ? 's' : ''}</span>
+          </div>
+        </div>
+        <div class="status-row">${statusChips}</div>
+        <div class="alerts">${alertsHTML}</div>
+        ${winsHTML}
+        <div class="issues-toggle">
+          <button class="toggle-btn" onclick="toggleIssues(this)">
+            <span class="arrow">▸</span> View ${activeIssues.length} active issue${activeIssues.length !== 1 ? 's' : ''}
+          </button>
+          <div class="issues-table">
+            <table>
+              <thead><tr>
+                <th>Key</th><th>Summary</th><th>Status</th><th>Type</th><th>Est</th><th>Spent</th><th>Rem</th><th>Ratio</th>
+              </tr></thead>
+              <tbody>${tableRows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(card);
+  }
+}
+
+function toggleIssues(btn) {
+  const table = btn.nextElementSibling;
+  const arrow = btn.querySelector('.arrow');
+  table.classList.toggle('open');
+  arrow.textContent = table.classList.contains('open') ? '▾' : '▸';
+}
+
+function resetReport() {
+  document.getElementById('upload-screen').style.display = 'flex';
+  document.getElementById('report-screen').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+}
+
+function copyJQL() {
+  const jql = document.getElementById('jqlCode').textContent;
+  navigator.clipboard.writeText(jql).then(() => {
+    const btn = document.getElementById('jqlCopyBtn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+/* ─── File Handling ─── */
+function handleFile(file) {
+  if (!file || !file.name.endsWith('.csv')) {
+    alert('Please upload a .csv file');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const issues = parseCSV(e.target.result);
+      if (issues.length === 0) { alert('No data found in CSV.'); return; }
+      const data = analyzeData(issues);
+      renderReport(data);
+    } catch (err) {
+      alert('Error parsing CSV: ' + err.message);
+      console.error(err);
+    }
+  };
+  reader.readAsText(file);
+}
+
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  handleFile(e.dataTransfer.files[0]);
+});
+</script>
+
+</body>
+</html>
